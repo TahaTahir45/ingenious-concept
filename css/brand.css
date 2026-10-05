@@ -1,0 +1,82 @@
+/* Brand system page */
+.brand { padding-top: 76px; }
+.brand__intro { padding-block: var(--space-8) var(--space-6); }
+.brand__intro h1 { font-size: var(--fs-hero); letter-spacing: -0.035em; }
+.brand__intro p { margin-top: var(--space-5); font-size: var(--fs-md); line-height: 1.55; color: var(--text-muted); }
+
+.brand__section { padding-block: var(--space-7); border-top: 1px solid var(--line); }
+.brand__section h2 { font-size: var(--fs-2xl); margin-bottom: var(--space-6); }
+.brand__sub { font-family: var(--font-body); font-size: var(--fs-md); letter-spacing: 0; margin: var(--space-6) 0 var(--space-4); }
+.brand__note,
+.brand__lead { margin-top: var(--space-5); color: var(--text-muted); }
+.brand__lead { margin: calc(var(--space-5) * -1) 0 var(--space-6); font-size: var(--fs-md); line-height: 1.5; }
+
+.brand__grid { display: grid; gap: var(--space-4); }
+.brand__grid--logo { grid-template-columns: 1.3fr 1.3fr 1fr; }
+.brand__grid--type,
+.brand__grid--themes { grid-template-columns: 1fr 1fr; }
+
+.tile {
+  margin: 0;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+}
+.tile__stage { display: grid; place-items: center; min-height: 220px; padding: var(--space-6); }
+.tile figcaption { padding: var(--space-3) var(--space-5); border-top: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-muted); }
+.tile__favicon { width: 96px; height: 96px; }
+.logo--xl .logo__mark { width: 84px; height: 84px; }
+.logo--xl .logo__word { font-size: 1.7rem; }
+
+.swatches { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--space-4); }
+.swatch { display: grid; gap: 2px; font-size: var(--fs-sm); color: var(--text-muted); }
+.swatch strong { color: var(--text); font-size: var(--fs-base); margin-top: var(--space-2); }
+.swatch code { font-family: inherit; color: var(--text); }
+.swatch__chip {
+  display: block;
+  height: 110px;
+  border-radius: 16px;
+  background: var(--sw);
+  border: 1px solid var(--line);
+}
+.swatch__chip--split { background: linear-gradient(135deg, var(--sw) 50%, var(--sw2) 50%); }
+
+.type-card { padding: var(--space-6); border-radius: var(--radius-panel); border: 1px solid var(--line); background: var(--bg-raised); }
+.type-card__meta { font-weight: 600; font-size: var(--fs-sm); color: var(--text-muted); }
+.type-card__display { margin-top: var(--space-4); font-family: var(--font-display); font-weight: 700; font-size: clamp(2rem, 1rem + 2.5vw, 3rem); line-height: 1.04; letter-spacing: -0.035em; }
+.type-card__body { margin-top: var(--space-4); font-size: var(--fs-md); line-height: 1.5; }
+.type-card__why { margin-top: var(--space-5); color: var(--text-muted); }
+
+.scale { list-style: none; margin: var(--space-6) 0 0; padding: 0; display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-6); }
+.scale li { display: grid; gap: var(--space-2); }
+.scale span { font-family: var(--font-display); font-weight: 600; line-height: 1; }
+.scale code { font-family: inherit; font-size: var(--fs-sm); color: var(--text-muted); }
+
+.theme-demo {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+}
+.theme-demo__label { font-family: var(--font-display); font-weight: 600; font-size: var(--fs-lg); }
+.theme-demo__tabs { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.theme-demo__tabs .pillar-tab { cursor: default; }
+.theme-demo .deliv__toggle { cursor: default; }
+.theme-demo__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.theme-demo__actions .btn { cursor: default; }
+
+@media (max-width: 900px) {
+  .brand__grid--logo { grid-template-columns: 1fr 1fr; }
+  .brand__grid--type,
+  .brand__grid--themes { grid-template-columns: 1fr; }
+  .swatches { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 560px) {
+  .brand__grid--logo { grid-template-columns: 1fr; }
+  .swatches { grid-template-columns: repeat(2, 1fr); }
+}

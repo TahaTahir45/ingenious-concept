@@ -1,0 +1,102 @@
+/* ==========================================================
+   Ingenious Concepts — design tokens
+   Dark ("Prism Ink") is the default; light ("Lumen") swaps the
+   same token names so every component themes for free.
+   ========================================================== */
+
+:root,
+[data-theme="dark"] {
+  /* Core palette */
+  --ink: #10133a;          /* Prism Ink — base */
+  --ink-raised: #181c4a;   /* Night Glass — raised surfaces */
+  --ink-deep: #0a0c28;     /* deepest shade, footer and wells */
+  --lumen: #eef0fa;        /* Lumen — light base / text on ink */
+  --slate: #a3a9cc;        /* muted text on ink */
+  --ion: #5b8cff;          /* Ion — brand accent, links, focus */
+
+  /* Spectrum: one hue per service pillar */
+  --c-ai: #5b8cff;
+  --c-growth: #37d6a6;
+  --c-ground: #ffb547;
+  --c-games: #ff5c93;
+  --c-talent: #a88bff;
+
+  /* Semantic tokens (dark) */
+  --bg: var(--ink);
+  --bg-raised: var(--ink-raised);
+  --bg-deep: var(--ink-deep);
+  --text: var(--lumen);
+  --text-muted: var(--slate);
+  --line: rgba(200, 210, 255, 0.14);
+  --line-strong: rgba(200, 210, 255, 0.28);
+  --accent: var(--ion);
+  --btn-bg: var(--lumen);
+  --btn-text: var(--ink);
+  --glass: rgba(24, 28, 74, 0.62);
+  --shadow-deep: 0 30px 60px -30px rgba(3, 4, 20, 0.9);
+  --beam: #ffffff;
+  --danger: #ff8a8a;
+  color-scheme: dark;
+
+  /* Type */
+  --font-display: "Unbounded", "Arial Black", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Instrument Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* Scale (classical: 14 / 17 / 21 / 24 / 36 / 48 / 72) */
+  --fs-sm: 0.875rem;
+  --fs-base: 1.0625rem;
+  --fs-md: 1.3125rem;
+  --fs-lg: 1.5rem;
+  --fs-xl: clamp(1.75rem, 1.2rem + 2vw, 2.25rem);
+  --fs-2xl: clamp(2rem, 1.2rem + 3.2vw, 3rem);
+  --fs-hero: clamp(2.3rem, 1rem + 5vw, 4.75rem);
+
+  /* Space & shape */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4.5rem;
+  --space-9: 7rem;
+  --radius-panel: 24px;
+  --radius-row: 14px;
+  --radius-chip: 8px;
+  --radius-pill: 999px;
+  --container: 1200px;
+  --gutter: clamp(1.25rem, 4vw, 2.5rem);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-fast: 180ms;
+  --dur-med: 420ms;
+  --dur-slow: 900ms;
+}
+
+[data-theme="light"] {
+  --bg: #eef0f8;
+  --bg-raised: #ffffff;
+  --bg-deep: #e2e5f2;
+  --text: #12153a;
+  --text-muted: #4e5478;
+  --line: rgba(18, 21, 58, 0.12);
+  --line-strong: rgba(18, 21, 58, 0.26);
+  --accent: #2f5be0;
+  --btn-bg: var(--ink);
+  --btn-text: var(--lumen);
+  --glass: rgba(255, 255, 255, 0.72);
+  --shadow-deep: 0 30px 60px -34px rgba(18, 21, 58, 0.35);
+  --beam: #12153a;
+  --danger: #c0262d;
+
+  /* Spectrum deepened for contrast on light */
+  --c-ai: #2f5be0;
+  --c-growth: #0e8f6a;
+  --c-ground: #b86a00;
+  --c-games: #d12a68;
+  --c-talent: #6c46e0;
+  color-scheme: light;
+}

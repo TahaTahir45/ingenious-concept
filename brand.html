@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" class="no-js" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Brand system | Ingenious Concepts</title>
+  <meta name="description" content="The Ingenious Concepts identity: prism mark, palette, typography and dark/light themes.">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <script>
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem("ic-theme"); } catch (e) {}
+      document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Unbounded:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/sections.css">
+  <link rel="stylesheet" href="css/brand.css">
+  <script type="module" src="js/brand.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="ic-mark" viewBox="0 0 64 64">
+      <path d="M28 9 L48 47 L8 47 Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"
+        style="fill: color-mix(in oklab, var(--accent) 24%, transparent)"/>
+      <path d="M1 26 L18 28" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+      <path d="M18 28 L36 24.2 L40.4 32.6 Z" fill="currentColor" opacity=".35"/>
+      <g stroke-width="2.6" stroke-linecap="round" fill="none">
+        <path d="M36 24.2 L62 22.8" style="stroke: var(--c-ai)"/>
+        <path d="M37.1 26.3 L62 28.9" style="stroke: var(--c-growth)"/>
+        <path d="M38.2 28.4 L62 34.8" style="stroke: var(--c-ground)"/>
+        <path d="M39.3 30.5 L62 40.6" style="stroke: var(--c-games)"/>
+        <path d="M40.4 32.6 L62 46.6" style="stroke: var(--c-talent)"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <header class="site-header is-scrolled">
+    <div class="container site-header__inner">
+      <a class="logo" href="index.html" aria-label="Ingenious Concepts home">
+        <svg class="logo__mark" aria-hidden="true"><use href="#ic-mark"/></svg>
+        <span class="logo__word" aria-hidden="true"><span>Ingenious</span><span>Concepts</span></span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        <ul class="nav__links" id="nav-links">
+          <li><a href="#logo">Logo</a></li>
+          <li><a href="#color">Color</a></li>
+          <li><a href="#type">Type</a></li>
+          <li><a href="#themes">Themes</a></li>
+        </ul>
+        <button class="icon-btn theme-toggle" type="button" aria-label="Switch to light theme">
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        </button>
+        <a class="btn btn--ghost btn--sm" href="index.html">Back to site</a>
+        <button class="icon-btn menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h16M4 16h16"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="brand">
+    <section class="container brand__intro">
+      <h1>Brand system</h1>
+      <p>
+        The identity is built on one idea: a prism. A single beam of light goes in and leaves as a spectrum.
+        For Ingenious Concepts, the beam is the client's brief and the spectrum is the five practices that
+        deliver it. Every practice owns one color, in the same order, everywhere it appears.
+      </p>
+    </section>
+
+    <section class="container brand__section" id="logo" aria-labelledby="logo-title">
+      <h2 id="logo-title">Logo</h2>
+      <div class="brand__grid brand__grid--logo">
+        <figure class="tile" data-theme="dark">
+          <div class="tile__stage">
+            <span class="logo logo--xl"><svg class="logo__mark" aria-hidden="true"><use href="#ic-mark"/></svg><span class="logo__word"><span>Ingenious</span><span>Concepts</span></span></span>
+          </div>
+          <figcaption>Primary lockup on Prism Ink</figcaption>
+        </figure>
+        <figure class="tile" data-theme="light">
+          <div class="tile__stage">
+            <span class="logo logo--xl"><svg class="logo__mark" aria-hidden="true"><use href="#ic-mark"/></svg><span class="logo__word"><span>Ingenious</span><span>Concepts</span></span></span>
+          </div>
+          <figcaption>Primary lockup on Lumen</figcaption>
+        </figure>
+        <figure class="tile" data-theme="dark">
+          <div class="tile__stage">
+            <img class="tile__favicon" src="assets/favicon.svg" alt="App icon: the prism mark on a rounded Prism Ink square">
+          </div>
+          <figcaption>App icon and favicon</figcaption>
+        </figure>
+      </div>
+      <p class="brand__note">
+        Construction: an equilateral prism with a soft Ion tint, one white beam entering the left face and five
+        rays leaving the right face. Keep clear space equal to the prism's height on every side, and never recolor
+        or reorder the rays. The wordmark is Unbounded SemiBold, set on two lines with tight leading.
+      </p>
+    </section>
+
+    <section class="container brand__section" id="color" aria-labelledby="color-title">
+      <h2 id="color-title">Color</h2>
+      <h3 class="brand__sub">Core</h3>
+      <ul class="swatches">
+        <li class="swatch" style="--sw:#10133a"><span class="swatch__chip"></span><strong>Prism Ink</strong><code>#10133A</code><span>Dark theme base</span></li>
+        <li class="swatch" style="--sw:#181c4a"><span class="swatch__chip"></span><strong>Night Glass</strong><code>#181C4A</code><span>Raised surfaces on dark</span></li>
+        <li class="swatch" style="--sw:#eef0fa"><span class="swatch__chip"></span><strong>Lumen</strong><code>#EEF0FA</code><span>Light base, text on dark</span></li>
+        <li class="swatch" style="--sw:#a3a9cc"><span class="swatch__chip"></span><strong>Slate</strong><code>#A3A9CC</code><span>Secondary text on dark</span></li>
+        <li class="swatch" style="--sw:#5b8cff"><span class="swatch__chip"></span><strong>Ion</strong><code>#5B8CFF</code><span>Links, focus, brand accent</span></li>
+      </ul>
+
+      <h3 class="brand__sub">Spectrum: one color per practice</h3>
+      <ul class="swatches swatches--spectrum">
+        <li class="swatch" style="--sw:#5b8cff; --sw2:#2f5be0"><span class="swatch__chip swatch__chip--split"></span><strong>AI &amp; digital</strong><code>#5B8CFF / #2F5BE0</code><span>Dark / light theme</span></li>
+        <li class="swatch" style="--sw:#37d6a6; --sw2:#0e8f6a"><span class="swatch__chip swatch__chip--split"></span><strong>Growth marketing</strong><code>#37D6A6 / #0E8F6A</code><span>Dark / light theme</span></li>
+        <li class="swatch" style="--sw:#ffb547; --sw2:#b86a00"><span class="swatch__chip swatch__chip--split"></span><strong>On-ground</strong><code>#FFB547 / #B86A00</code><span>Dark / light theme</span></li>
+        <li class="swatch" style="--sw:#ff5c93; --sw2:#d12a68"><span class="swatch__chip swatch__chip--split"></span><strong>Games &amp; interactive</strong><code>#FF5C93 / #D12A68</code><span>Dark / light theme</span></li>
+        <li class="swatch" style="--sw:#a88bff; --sw2:#6c46e0"><span class="swatch__chip swatch__chip--split"></span><strong>Tech staffing</strong><code>#A88BFF / #6C46E0</code><span>Dark / light theme</span></li>
+      </ul>
+      <p class="brand__note">
+        Spectrum colors only ever mean a practice, and they're used for marks (dots, borders, rays), never for
+        body text. The light-theme values are deepened so every mark keeps at least 3:1 contrast on Lumen,
+        the WCAG minimum for non-text elements.
+      </p>
+    </section>
+
+    <section class="container brand__section" id="type" aria-labelledby="type-title">
+      <h2 id="type-title">Typography</h2>
+      <div class="brand__grid brand__grid--type">
+        <div class="type-card">
+          <p class="type-card__meta">Display: Unbounded, 400 to 700</p>
+          <p class="type-card__display">One brief in.<br>Every channel out.</p>
+          <p class="type-card__why">A wide, sculpted grotesque. Its broad letterforms feel built rather than written, which suits a studio that makes 3D, games and physical installations.</p>
+        </div>
+        <div class="type-card">
+          <p class="type-card__meta">Text: Instrument Sans, 400 to 600</p>
+          <p class="type-card__body">Agents that read documents, answer customers, update your CRM and hand off to a person when it matters. Built on your own data, with guardrails and logs you can audit.</p>
+          <p class="type-card__why">A compact, slightly condensed sans that stays quiet next to Unbounded and holds up at small sizes in forms and chips.</p>
+        </div>
+      </div>
+      <ol class="scale">
+        <li><span style="font-size:4.75rem">Aa</span><code>76 / Hero</code></li>
+        <li><span style="font-size:3rem">Aa</span><code>48 / Section</code></li>
+        <li><span style="font-size:2.25rem">Aa</span><code>36 / Panel</code></li>
+        <li><span style="font-size:1.5rem">Aa</span><code>24 / Large</code></li>
+        <li><span style="font-size:1.3125rem">Aa</span><code>21 / Lead</code></li>
+        <li><span style="font-size:1.0625rem; font-family: var(--font-body)">Aa</span><code>17 / Body</code></li>
+        <li><span style="font-size:.875rem; font-family: var(--font-body)">Aa</span><code>14 / Small</code></li>
+      </ol>
+    </section>
+
+    <section class="container brand__section" id="themes" aria-labelledby="themes-title">
+      <h2 id="themes-title">Dark and light</h2>
+      <p class="brand__lead">Both themes share the same token names, so every component switches with one attribute. Dark is the default, because the prism and its rays read best as light against Prism Ink.</p>
+      <div class="brand__grid brand__grid--themes">
+        <div class="theme-demo" data-theme="dark"></div>
+        <div class="theme-demo" data-theme="light"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <p>© 2026 Ingenious Concepts. Concept redesign by Umar Khan.</p>
+      <ul class="site-footer__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="index.html#contact">Contact</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+</html>
