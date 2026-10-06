@@ -6,6 +6,10 @@ import { cssVar, prefersReducedMotion } from "../utils/dom.js";
  * leaves as five colored rays, one per service pillar. Each ray carries an
  * HTML label button that jumps to that pillar in the services section.
  *
+ * On wide screens the scene becomes a space you can move through: the
+ * camera follows the pointer and dollies in on scroll, dust sits in depth
+ * layers, and the rays themselves can be hovered and clicked.
+ *
  * Uses the global THREE (r128 UMD build loaded in index.html).
  * Returns null if WebGL is unavailable so the page can show its SVG fallback.
  */
@@ -14,6 +18,8 @@ const RAY_ANGLES = [3, -6, -15, -24, -33].map((d) => (d * Math.PI) / 180);
 const BEAM_ANGLE = (-6 * Math.PI) / 180;
 const R = 1.9; // prism circumradius (local units)
 const DEPTH = 1.5;
+const CAM_Z = 16;
+const HIT_PX = 22; // how close the pointer must be to a ray to grab it
 
 const BEAM_VERT = /* glsl */ `
   varying vec2 vUv;
@@ -28,12 +34,17 @@ const BEAM_FRAG = /* glsl */ `
   uniform float uHead;
   uniform float uTail;
   uniform float uSoft;
+  uniform float uTime;
+  uniform float uLen;
+  uniform float uFlow;
   varying vec2 vUv;
   void main() {
     float across = 1.0 - abs(vUv.y - 0.5) * 2.0;
     across = pow(clamp(across, 0.0, 1.0), uSoft);
     float along = smoothstep(0.0, uHead, vUv.x) * (1.0 - smoothstep(1.0 - uTail, 1.0, vUv.x));
-    gl_FragColor = vec4(uColor, uOpacity * across * along);
+    // Pulses of light travel along the beam, away from its source
+    float pulse = smoothstep(0.55, 1.0, sin(vUv.x * uLen * 0.55 - uTime * 2.2));
+    gl_FragColor = vec4(uColor, uOpacity * across * along * (1.0 + uFlow * pulse));
   }`;
 
 const GLASS_VERT = /* glsl */ `
@@ -101,9 +112,12 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
   renderer.setClearColor(0x000000, 0);
 
   const reduced = prefersReducedMotion();
+  const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const dense = window.innerWidth >= 1024; // more dust, in depth layers
+  const hero = canvas.closest(".hero");
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
-  camera.position.set(0, 0, 16);
+  camera.position.set(0, 0, CAM_Z);
 
   const rig = new THREE.Group(); // positioned + scaled per layout
   scene.add(rig);
@@ -188,7 +202,9 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
   const unitPlane = new THREE.PlaneGeometry(1, 1);
   unitPlane.translate(0.5, 0, 0); // grows from its start point
 
-  function makeBeamLayer({ width, opacity, head, tail, soft }) {
+  const time = { value: 0 }; // shared by every beam layer
+
+  function makeBeamLayer({ width, opacity, head, tail, soft, flow }) {
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         uColor: { value: new THREE.Color(1, 1, 1) },
@@ -196,6 +212,9 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
         uHead: { value: head },
         uTail: { value: tail },
         uSoft: { value: soft },
+        uTime: time,
+        uLen: { value: 1 },
+        uFlow: { value: flow },
       },
       vertexShader: BEAM_VERT,
       fragmentShader: BEAM_FRAG,
@@ -211,10 +230,10 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
 
   function makeBeam(opts) {
     const group = new THREE.Group();
-    const glow = makeBeamLayer({ width: opts.glow, opacity: opts.glowOpacity, head: opts.head, tail: opts.tail, soft: 1.6 });
-    const core = makeBeamLayer({ width: opts.core, opacity: opts.coreOpacity, head: opts.head, tail: opts.tail, soft: 0.6 });
+    const glow = makeBeamLayer({ width: opts.glow, opacity: opts.glowOpacity, head: opts.head, tail: opts.tail, soft: 1.6, flow: 0.6 });
+    const core = makeBeamLayer({ width: opts.core, opacity: opts.coreOpacity, head: opts.head, tail: opts.tail, soft: 0.6, flow: 0.25 });
     group.add(glow, core);
-    group.userData = { layers: [glow, core], length: 1 };
+    group.userData = { layers: [glow, core], length: 1, heat: 1 };
     rig.add(group);
     return group;
   }
@@ -229,9 +248,17 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
     beam.rotation.z = angle;
     beam.userData.length = length;
   };
+  // heat > 1 brightens and widens a beam (hovered), < 1 dims it
   const setBeamProgress = (beam, p) => {
     const len = Math.max(0.0001, beam.userData.length * p);
-    beam.userData.layers.forEach((l) => l.scale.set(len, l.userData.width, 1));
+    const { heat, layers } = beam.userData;
+    const [glow, core] = layers;
+    const boost = 1 + (heat - 1) * hotGain;
+    glow.scale.set(len, glow.userData.width * boost, 1);
+    glow.material.uniforms.uOpacity.value = glow.userData.baseOpacity * boost;
+    core.scale.set(len, core.userData.width, 1);
+    core.material.uniforms.uOpacity.value = core.userData.baseOpacity * Math.min(1, 0.4 + 0.6 * heat);
+    layers.forEach((l) => (l.material.uniforms.uLen.value = len));
     beam.visible = p > 0.001;
   };
 
@@ -251,25 +278,31 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
   const exitGlow = makeSprite(1.8);
   exitGlow.position.copy(along(apex, right, 0.5));
 
-  /* Dust motes catching the light */
-  const DUST = 140;
-  const dustPos = new Float32Array(DUST * 3);
-  for (let i = 0; i < DUST; i++) {
-    dustPos[i * 3] = (Math.random() - 0.5) * 22;
-    dustPos[i * 3 + 1] = (Math.random() - 0.5) * 12;
-    dustPos[i * 3 + 2] = (Math.random() - 0.5) * 6;
-  }
-  const dustGeo = new THREE.BufferGeometry();
-  dustGeo.setAttribute("position", new THREE.BufferAttribute(dustPos, 3));
-  const dustMat = new THREE.PointsMaterial({
-    size: 0.05,
-    map: glowTex,
-    transparent: true,
-    depthWrite: false,
-    opacity: 0.6,
+  /* Dust motes catching the light. Wide screens get far, mid and near
+     layers so the camera's movement reads as real depth. */
+  const DUST_LAYERS = dense
+    ? [
+        { count: 320, size: 0.09, opacity: 0.5, x: 40, y: 22, z: [-16, -4] },
+        { count: 170, size: 0.06, opacity: 0.6, x: 24, y: 13, z: [-4, 3] },
+        { count: 26, size: 0.22, opacity: 0.2, x: 14, y: 8, z: [4, 9] },
+      ]
+    : [{ count: 140, size: 0.05, opacity: 0.55, x: 22, y: 12, z: [-3, 3] }];
+
+  const dustLayers = DUST_LAYERS.map((d) => {
+    const pos = new Float32Array(d.count * 3);
+    for (let i = 0; i < d.count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * d.x;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * d.y;
+      pos[i * 3 + 2] = d.z[0] + Math.random() * (d.z[1] - d.z[0]);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.PointsMaterial({ size: d.size, map: glowTex, transparent: true, depthWrite: false });
+    const points = new THREE.Points(geo, mat);
+    points.userData.baseOpacity = d.opacity;
+    scene.add(points);
+    return points;
   });
-  const dust = new THREE.Points(dustGeo, dustMat);
-  scene.add(dust);
 
   /* ---------- Labels ---------- */
   const labels = pillars.map((p, i) => {
@@ -281,15 +314,21 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
     btn.append(p.short);
     btn.setAttribute("aria-label", `See ${p.title} services`);
     btn.addEventListener("click", () => onSelect?.(i));
+    btn.addEventListener("pointerenter", () => setLabelHover(i));
+    btn.addEventListener("pointerleave", () => setLabelHover(-1));
+    btn.addEventListener("focus", () => setLabelHover(i));
+    btn.addEventListener("blur", () => setLabelHover(-1));
     labelLayer?.appendChild(btn);
     return btn;
   });
 
   /* ---------- Theme ---------- */
   let glowStrength = 1;
+  let hotGain = 0.9; // how much hover widens a ray; normal blending on light needs less
   function applyTheme() {
     const dark = document.documentElement.dataset.theme !== "light";
     glowStrength = dark ? 1 : 0.35;
+    hotGain = dark ? 0.9 : 0.4;
     const blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
     const beamColor = new THREE.Color(cssVar("--beam") || "#ffffff");
 
@@ -330,21 +369,51 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
     });
     edgeMat.color.set(dark ? "#e6ebff" : "#2a3170");
     edgeMat.opacity = dark ? 0.55 : 0.5;
-    dustMat.color.set(dark ? "#c7d2ff" : "#3d4690");
-    dustMat.opacity = dark ? 0.55 : 0.35;
-    dustMat.blending = blending;
-    dustMat.needsUpdate = true;
+    dustLayers.forEach((d) => {
+      d.material.color.set(dark ? "#c7d2ff" : "#3d4690");
+      d.material.opacity = d.userData.baseOpacity * (dark ? 1 : 0.64);
+      d.material.blending = blending;
+      d.material.needsUpdate = true;
+    });
     requestRender();
   }
 
   /* ---------- Layout ---------- */
   const proj = new THREE.Vector3();
+  const size = { w: 1, h: 1, top: 0 };
+  const labelPts = exits.map(() => new THREE.Vector3());
+  const rayEnds = exits.map(() => new THREE.Vector3());
+  const raySegs = exits.map(() => [0, 0, 0, 0]); // screen-space, for hit testing
   let showLabels = false;
+  let cinematic = false; // camera moves (wide screens only)
+
+  function toScreen(local) {
+    proj.copy(local);
+    rig.localToWorld(proj);
+    proj.project(camera);
+    return [(proj.x * 0.5 + 0.5) * size.w, (-proj.y * 0.5 + 0.5) * size.h];
+  }
+
+  // Labels and hit areas follow the rays as the camera moves
+  function placeLabels() {
+    if (!showLabels) return;
+    labels.forEach((label, i) => {
+      const [x, y] = toScreen(labelPts[i]);
+      label.style.setProperty("--x", `${x.toFixed(1)}px`);
+      label.style.setProperty("--y", `${y.toFixed(1)}px`);
+      const [x1, y1] = toScreen(exits[i]);
+      const [x2, y2] = toScreen(rayEnds[i]);
+      raySegs[i] = [x1, y1, x2, y2];
+    });
+  }
 
   function layout() {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
     if (!w || !h) return;
+    size.w = w;
+    size.h = h;
+    size.top = canvas.getBoundingClientRect().top + window.scrollY;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
@@ -355,8 +424,8 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
 
     // Screen-fraction placement of the prism, then convert to world units
     let fx = 0.5;
-    let fy = 0.33;
-    let radiusWorld = 0.13 * vh;
+    let fy = 0.34;
+    let radiusWorld = 0.17 * vh;
     if (aspect < 1.2) {
       fy = 0.27;
       radiusWorld = Math.min(0.15 * vw, 0.11 * vh);
@@ -371,6 +440,7 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
     const s = radiusWorld / R;
     rig.scale.setScalar(s);
     rig.position.set((fx - 0.5) * vw, (0.5 - fy) * vh, 0);
+    rig.updateMatrixWorld();
 
     // Incoming beam: from beyond the left edge to the entry point
     const entryWorldX = rig.position.x + entry.x * s;
@@ -389,26 +459,59 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
       const exWorldX = rig.position.x + ex.x * s;
       const lenWorld = (vw / 2 - exWorldX + 1.2) / Math.cos(RAY_ANGLES[i]);
       setBeamGeometry(ray, ex, RAY_ANGLES[i], lenWorld / s);
+
+      // Label sits ~40% of the way to the right edge; hit area runs most of the ray
+      const dir = new THREE.Vector3(Math.cos(RAY_ANGLES[i]), Math.sin(RAY_ANGLES[i]), 0);
+      const d = ((vw / 2 - exWorldX) * 0.4) / s / dir.x;
+      labelPts[i].copy(ex).addScaledVector(dir, d);
+      rayEnds[i].copy(ex).addScaledVector(dir, (lenWorld / s) * 0.85);
     });
 
-    // Labels sit on each ray, ~40% of the way to the right edge
     showLabels = w > 900;
-    labels.forEach((label, i) => {
-      const ex = exits[i];
-      const exWorldX = rig.position.x + ex.x * s;
-      const dWorld = (vw / 2 - exWorldX) * 0.4;
-      const d = dWorld / s / Math.cos(RAY_ANGLES[i]);
-      proj.set(ex.x + Math.cos(RAY_ANGLES[i]) * d, ex.y + Math.sin(RAY_ANGLES[i]) * d, 0);
-      rig.localToWorld(proj);
-      proj.project(camera);
-      const x = (proj.x * 0.5 + 0.5) * w;
-      const y = (-proj.y * 0.5 + 0.5) * h;
-      label.style.setProperty("--x", `${x.toFixed(1)}px`);
-      label.style.setProperty("--y", `${y.toFixed(1)}px`);
-      label.tabIndex = showLabels ? 0 : -1;
-    });
+    cinematic = showLabels && !reduced;
+    labels.forEach((label) => (label.tabIndex = showLabels ? 0 : -1));
+    if (!cinematic) {
+      camera.position.set(0, 0, CAM_Z);
+      camera.lookAt(0, 0, 0);
+    }
+    camera.updateMatrixWorld();
+    placeLabels();
 
     requestRender();
+  }
+
+  /* ---------- Ray hover (wide screens) ---------- */
+  let rayHover = -1;
+  let labelHover = -1;
+  let hovered = -1;
+
+  function syncHover() {
+    const next = labelHover >= 0 ? labelHover : rayHover;
+    hero?.classList.toggle("is-ray-hover", labelHover < 0 && rayHover >= 0);
+    if (next === hovered) return;
+    hovered = next;
+    labels.forEach((l, k) => l.classList.toggle("is-hot", k === hovered));
+    requestRender();
+  }
+  function setLabelHover(i) {
+    labelHover = i;
+    syncHover();
+  }
+  function rayAt(px, py) {
+    let best = -1;
+    let bestD = HIT_PX;
+    raySegs.forEach(([x1, y1, x2, y2], i) => {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const t = ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy || 1);
+      if (t < 0.08 || t > 1) return; // skip where the rays bunch up at the glass
+      const dist = Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+      if (dist < bestD) {
+        bestD = dist;
+        best = i;
+      }
+    });
+    return best;
   }
 
   /* ---------- Animation ---------- */
@@ -432,8 +535,11 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
     const glintT = reduced ? 1 : clamp01((t - 1.0) / 1.1);
     glassFront.uniforms.uGlint.value = glassBack.uniforms.uGlint.value = -4 + glintT * 9;
 
+    time.value = t;
     rays.forEach((ray, i) => {
       const p = reduced ? 1 : easeOutCubic(clamp01((t - 1.3 - i * 0.09) / 1.1));
+      const target = hovered < 0 ? 1 : i === hovered ? 1.8 : 0.45;
+      ray.userData.heat += (target - ray.userData.heat) * (running ? 0.12 : 1);
       setBeamProgress(ray, p);
       labels[i].classList.toggle("is-lit", showLabels && p > 0.55);
     });
@@ -444,8 +550,20 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
       pointer.y += (pointer.ty - pointer.y) * 0.06;
       prism.rotation.y = pointer.x * 0.35 + Math.sin(t * 0.5) * 0.06 + scrollFrac * 1.1;
       prism.rotation.x = -pointer.y * 0.2 + Math.cos(t * 0.4) * 0.04;
-      dust.rotation.y = t * 0.012;
-      dust.position.y = Math.sin(t * 0.2) * 0.15;
+      dustLayers.forEach((d, k) => {
+        d.rotation.y = t * 0.012 * (1 + k * 0.6);
+        d.position.y = Math.sin(t * 0.2 + k) * 0.15;
+      });
+    }
+
+    // Wide screens: the camera eases in on load, drifts with the pointer
+    // and pushes toward the prism as the page scrolls away
+    if (cinematic) {
+      const intro = 1 - easeOutCubic(clamp01(t / 3.2));
+      camera.position.set(pointer.x * 0.8, -pointer.y * 0.45 + intro * 0.8, CAM_Z + intro * 5 - scrollFrac * 3.5);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+      placeLabels();
     }
   }
 
@@ -488,13 +606,36 @@ export function initPrismScene({ canvas, labelLayer, onSelect }) {
       "scroll",
       () => {
         scrollFrac = clamp01(window.scrollY / (canvas.clientHeight || 1));
+        hero?.style.setProperty("--hero-p", scrollFrac.toFixed(3));
       },
       { passive: true }
     );
   }
 
+  // Rays can be hovered and clicked directly when there's a mouse
+  if (finePointer && hero) {
+    window.addEventListener(
+      "pointermove",
+      (e) => {
+        if (e.pointerType === "touch") return;
+        const inHero = showLabels && visible && e.target instanceof Element && hero.contains(e.target);
+        rayHover = inHero ? rayAt(e.clientX, e.clientY + window.scrollY - size.top) : -1;
+        syncHover();
+      },
+      { passive: true }
+    );
+    hero.addEventListener("click", (e) => {
+      if (rayHover < 0 || e.target.closest("a, button")) return;
+      onSelect?.(rayHover);
+    });
+  }
+
   const io = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
+    if (!visible) {
+      rayHover = -1;
+      syncHover();
+    }
     visible ? play() : pause();
   });
   io.observe(canvas);

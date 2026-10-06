@@ -5,7 +5,7 @@ import { html, escapeHtml, prefersReducedMotion } from "../utils/dom.js";
  * Services section.
  * - Accessible tablist (arrow keys, Home/End) for the five pillars
  * - CSS 3D pentagonal prism that rotates to the selected pillar
- *   (click a face, swipe it, or use the tabs)
+ *   (click a face, drag it round, or use the tabs)
  * - Expandable deliverable rows for the active pillar
  *
  * Returns { select(index) } so other modules (the hero rays) can drive it.
@@ -20,6 +20,7 @@ export function initServices(root) {
   const panelEl = root.querySelector("[data-pillar-panel]");
   const count = pillars.length;
   const step = 360 / count;
+  const DRAG_DEG_PER_PX = 0.45;
 
   let active = -1;
   let angle = 0;
@@ -60,21 +61,43 @@ export function initServices(root) {
     '<div class="prism5__cap prism5__cap--top"></div><div class="prism5__cap prism5__cap--bottom"></div>'
   );
 
-  /* Click a face, or swipe the prism left/right */
-  let dragStartX = null;
+  /* Click a face, or drag the prism round; it snaps to the nearest face */
+  let drag = null;
   let dragged = false;
   viewport.addEventListener("pointerdown", (e) => {
-    dragStartX = e.clientX;
+    if (e.button !== 0) return;
+    drag = { x: e.clientX, from: angle, moved: false };
     dragged = false;
   });
-  viewport.addEventListener("pointerup", (e) => {
-    if (dragStartX === null) return;
-    const dx = e.clientX - dragStartX;
-    dragStartX = null;
-    if (Math.abs(dx) > 40) {
-      dragged = true;
-      select((active + (dx < 0 ? 1 : -1) + count) % count);
+  viewport.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    if (!drag.moved) {
+      if (Math.abs(dx) < 6) return;
+      drag.moved = true;
+      try { viewport.setPointerCapture(e.pointerId); } catch (_) { /* pointer already released */ }
+      viewport.classList.add("is-dragging");
     }
+    prismEl.style.setProperty("--angle", `${drag.from + dx * DRAG_DEG_PER_PX}deg`);
+  });
+  viewport.addEventListener("pointerup", (e) => {
+    if (!drag) return;
+    const { x, from, moved } = drag;
+    drag = null;
+    viewport.classList.remove("is-dragging");
+    if (!moved) return;
+    dragged = true;
+    const dx = e.clientX - x;
+    let snapped = Math.round((from + dx * DRAG_DEG_PER_PX) / step) * step;
+    // A short flick still turns one face
+    if (snapped === from && Math.abs(dx) > 40) snapped = from + Math.sign(dx) * step;
+    const index = ((Math.round(-snapped / step) % count) + count) % count;
+    select(index, { snapAngle: snapped });
+  });
+  viewport.addEventListener("pointercancel", () => {
+    drag = null;
+    viewport.classList.remove("is-dragging");
+    prismEl.style.setProperty("--angle", `${angle}deg`);
   });
   faces.forEach((face, i) =>
     face.addEventListener("click", () => {
@@ -119,7 +142,7 @@ export function initServices(root) {
           .map((d, j) => {
             const open = j === 0;
             return `
-          <li class="deliv__item${open ? " is-open" : ""}">
+          <li class="deliv__item${open ? " is-open" : ""}" style="--j:${j}">
             <h4>
               <button class="deliv__toggle" type="button" id="dt-${p.id}-${j}"
                 aria-expanded="${open}" aria-controls="d-${p.id}-${j}">
@@ -145,26 +168,32 @@ export function initServices(root) {
     }
   }
 
-  function select(i, { focusTab = false } = {}) {
+  function select(i, { focusTab = false, snapAngle } = {}) {
+    if (snapAngle !== undefined) {
+      angle = snapAngle;
+      prismEl.style.setProperty("--angle", `${angle}deg`);
+    }
     if (i === active) {
       if (focusTab) tabs[i].focus();
       return;
     }
     const p = pillars[i];
 
-    // Rotate the shortest way round the pentagon
-    if (active >= 0) {
+    // Rotate the shortest way round the pentagon (a drag has already set the angle)
+    if (snapAngle === undefined && active >= 0) {
       let delta = (i - active) % count;
       if (delta > count / 2) delta -= count;
       if (delta < -count / 2) delta += count;
       angle -= delta * step;
-    } else {
+    } else if (snapAngle === undefined) {
       angle = -i * step;
     }
     active = i;
 
     prismEl.style.setProperty("--angle", `${angle}deg`);
     root.style.setProperty("--pc", `var(${p.color})`);
+    // Page-wide ambient tint (cursor light, prism glow) follows the practice
+    document.documentElement.style.setProperty("--wash", `var(${p.color})`);
 
     tabs.forEach((t, k) => {
       const on = k === i;

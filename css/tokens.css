@@ -49,7 +49,7 @@
   --fs-lg: 1.5rem;
   --fs-xl: clamp(1.75rem, 1.2rem + 2vw, 2.25rem);
   --fs-2xl: clamp(2rem, 1.2rem + 3.2vw, 3rem);
-  --fs-hero: clamp(2.3rem, 1rem + 5vw, 4.75rem);
+  --fs-hero: clamp(2.3rem, 1rem + 5vw, 6rem);
 
   /* Space & shape */
   --space-1: 0.25rem;
@@ -74,6 +74,17 @@
   --dur-fast: 180ms;
   --dur-med: 420ms;
   --dur-slow: 900ms;
+}
+
+/* Ambient tint set by the services tabs; registered so it can fade between practices */
+@property --wash {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #5b8cff;
+}
+:root {
+  --wash: var(--c-ai);
+  transition: --wash 900ms var(--ease-out);
 }
 
 [data-theme="light"] {

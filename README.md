@@ -44,9 +44,9 @@ the 3D prism faces, the contact form and the logo.
 All 21 deliverables from the brief are presented in an interactive services section:
 
 - **Filter pills (tabs):** a color-coded tablist with full keyboard support (← → Home End).
-- **3D pentagonal prism:** five faces for five practices. It rotates the shortest way to the selected practice. Click a face, swipe it, or use the tabs; it tilts with the pointer.
+- **3D pentagonal prism:** five faces for five practices. It rotates the shortest way to the selected practice. Click a face, drag it round (it snaps to the nearest face), or use the tabs; it tilts with the pointer.
 - **Expandable deliverable cards:** each deliverable expands to a plain-language description and "includes" chips.
-- **Hero ray labels:** each ray in the WebGL hero is a button that jumps to its practice.
+- **Hero rays:** each ray in the WebGL hero has a label button that jumps to its practice. On desktop the rays themselves can be hovered (the ray brightens, the others dim) and clicked.
 
 All copy lives in one file, `js/data/pillars.js`. The tabs, prism faces, hero rays and contact form all render from it.
 
@@ -59,6 +59,12 @@ All copy lives in one file, `js/data/pillars.js`. The tabs, prism faces, hero ra
   - drifting dust
   - a single orchestrated intro: the beam fires, the glass catches it, and the rays fan out
 - **Responsive:** tuned for mobile (390px), tablet (820px) and desktop (1440px+). The WebGL scene recomposes for each aspect ratio.
+- **Desktop immersion** (wide screens and mouse pointers only, so the phone layout is untouched):
+  - the camera eases in on load, drifts with the pointer and pushes toward the prism on scroll, while the headline lifts away
+  - dust in far, mid and near depth layers, so camera movement reads as real depth
+  - light pulses that travel along the beams, spectrum light behind the scene, and a vignette that fades into the next section
+  - a soft cursor light across the page, tinted by the selected practice
+  - a larger, floating services prism lit by the selected practice, spotlight hover on the deliverable cards, and staggered entrances
 - **Micro-interactions:** spectrum glow on primary buttons, animated nav underlines, the rotating prism with pointer tilt, accordion rows, and a light line that runs through the process steps.
 - **Performance:**
   - no framework and no build step
@@ -90,7 +96,7 @@ All copy lives in one file, `js/data/pillars.js`. The tabs, prism faces, hero ra
     ├── brand.js            Brand page entry
     ├── data/pillars.js     All service content (single source of truth)
     ├── scene/prism-scene.js  Three.js hero
-    ├── components/         services, contact, nav, theme, reveal
+    ├── components/         services, contact, nav, theme, reveal, ambient (cursor light, card spotlight)
     └── utils/dom.js        Small shared helpers
 ```
 

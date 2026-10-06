@@ -7,6 +7,7 @@ import { initNav } from "./components/nav.js";
 import { initReveal } from "./components/reveal.js";
 import { initServices } from "./components/services.js";
 import { initContact } from "./components/contact.js";
+import { initCursorGlow, initSpotlight } from "./components/ambient.js";
 import { initPrismScene } from "./scene/prism-scene.js";
 import { prefersReducedMotion } from "./utils/dom.js";
 
@@ -18,6 +19,8 @@ initTheme(document.querySelector(".theme-toggle"));
 initNav(document.querySelector(".site-header"));
 initReveal();
 initReveal("[data-reveal-line]");
+initCursorGlow();
+initSpotlight(".deliv__item");
 
 const servicesSection = document.querySelector("#services");
 const services = initServices(servicesSection);

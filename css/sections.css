@@ -116,9 +116,50 @@
   box-shadow: 0 0 12px var(--c);
 }
 .ray-label:hover,
-.ray-label:focus-visible {
+.ray-label:focus-visible,
+.ray-label.is-hot {
   border-color: var(--c);
   padding-left: 0.9rem;
+}
+.ray-label.is-hot {
+  background: color-mix(in oklab, var(--c) 18%, var(--glass));
+  box-shadow: 0 0 28px -6px var(--c);
+}
+.hero.is-ray-hover { cursor: pointer; }
+
+/* Wide screens: the hero becomes a lit space rather than a flat backdrop */
+@media (min-width: 901px) {
+  .hero::before,
+  .hero::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  /* Spectrum light spilling from the prism and the rays */
+  .hero::before {
+    z-index: -2;
+    background:
+      radial-gradient(32% 42% at 50% 30%, color-mix(in oklab, var(--c-ai) 16%, transparent), transparent 70%),
+      radial-gradient(40% 55% at 100% 55%, color-mix(in oklab, var(--c-games) 12%, transparent), transparent 70%),
+      radial-gradient(34% 40% at 96% 20%, color-mix(in oklab, var(--c-growth) 9%, transparent), transparent 70%),
+      radial-gradient(50% 50% at 0% 25%, color-mix(in oklab, var(--c-talent) 8%, transparent), transparent 70%);
+    opacity: 0;
+    transition: opacity 2.4s var(--ease-out) 1.2s;
+  }
+  .is-loaded .hero::before { opacity: 1; }
+  /* Vignette, and a fade into the services section */
+  .hero::after {
+    z-index: -1;
+    background:
+      linear-gradient(to bottom, transparent 72%, var(--bg)),
+      radial-gradient(130% 95% at 50% 35%, transparent 55%, color-mix(in oklab, var(--bg-deep) 75%, transparent));
+  }
+  /* The headline lifts away as the camera pushes in */
+  .hero__content {
+    transform: translate3d(0, calc(var(--hero-p, 0) * -16vh), 0);
+    opacity: calc(1 - var(--hero-p, 0) * 1.5);
+  }
 }
 
 @media (max-width: 900px) {
@@ -188,7 +229,12 @@
   display: grid;
   place-items: center;
   perspective: 1200px;
+  cursor: grab;
+  touch-action: pan-y; /* horizontal drags spin the prism, vertical ones scroll */
+  user-select: none;
 }
+.prism-viewport.is-dragging { cursor: grabbing; }
+.prism-viewport.is-dragging .prism5 { transition: none; }
 .prism-viewport::after {
   content: "";
   position: absolute;
@@ -329,6 +375,18 @@
   transform: scaleY(0);
   transition: transform var(--dur-med) var(--ease-out);
 }
+.deliv__item > * { position: relative; z-index: 1; }
+/* Light under the cursor (--mx / --my from js/components/ambient.js) */
+.deliv__item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--pc) 16%, transparent), transparent 65%);
+  opacity: 0;
+  transition: opacity var(--dur-med) var(--ease-out);
+}
+.deliv__item:hover::after { opacity: 1; }
 .deliv__item:hover { border-color: color-mix(in oklab, var(--pc) 45%, transparent); transform: translateY(-2px); box-shadow: var(--shadow-deep); }
 .deliv__item:hover::before,
 .deliv__item.is-open::before { transform: scaleY(1); }
@@ -392,6 +450,38 @@
   font-weight: 500;
   background: color-mix(in oklab, var(--pc) 12%, transparent);
   border: 1px solid color-mix(in oklab, var(--pc) 35%, transparent);
+}
+
+/* Desktop: a bigger, floating prism lit by the selected practice */
+@media (min-width: 961px) {
+  .prism-viewport::before {
+    content: "";
+    position: absolute;
+    inset: -12% -20%;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(closest-side, color-mix(in oklab, var(--wash) 24%, transparent), transparent);
+  }
+  .prism-tilt { animation: prism-float 7s ease-in-out infinite; }
+  .pillar-panel.is-entering .deliv__item {
+    animation: deliv-in 620ms var(--ease-out) backwards;
+    animation-delay: calc(120ms + var(--j, 0) * 70ms);
+  }
+}
+@media (min-width: 1200px) {
+  .prism-viewport { height: 520px; }
+  .prism5 { --face-w: 236px; --face-h: 318px; }
+  .prism5__face { padding: 1.5rem; }
+  .prism5__face svg { width: 52px; height: 52px; }
+  .prism5__face span { font-size: 1.35rem; }
+  .prism-viewport::after { width: 320px; bottom: 6px; }
+}
+@keyframes prism-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -14px; }
+}
+@keyframes deliv-in {
+  from { opacity: 0; transform: translateY(14px); }
 }
 
 @media (max-width: 960px) {
@@ -460,6 +550,30 @@
   font-size: var(--fs-md);
 }
 .process__step p { margin-top: var(--space-3); color: var(--text-muted); }
+.process__step:nth-child(1) { --sc: var(--c-ai); }
+.process__step:nth-child(2) { --sc: var(--c-growth); }
+.process__step:nth-child(3) { --sc: var(--c-ground); }
+.process__step:nth-child(4) { --sc: var(--c-games); }
+
+/* Desktop: steps rise in one after another and light up on hover */
+@media (min-width: 901px) {
+  .process__step {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
+  }
+  .process__list.is-visible .process__step { opacity: 1; transform: none; }
+  .process__list.is-visible .process__step:nth-child(2) { transition-delay: 120ms; }
+  .process__list.is-visible .process__step:nth-child(3) { transition-delay: 240ms; }
+  .process__list.is-visible .process__step:nth-child(4) { transition-delay: 360ms; }
+  .no-js .process__step { opacity: 1; transform: none; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .process__num,
+  .process__step::before { transition: color var(--dur-fast), background-color var(--dur-fast), text-shadow var(--dur-med), box-shadow var(--dur-med); }
+  .process__step:hover .process__num { color: var(--sc); text-shadow: 0 0 28px color-mix(in oklab, var(--sc) 60%, transparent); }
+  .process__step:hover::before { background: var(--sc); box-shadow: 0 0 14px var(--sc); }
+}
 
 @media (max-width: 900px) {
   .process__list { grid-template-columns: repeat(2, 1fr); row-gap: var(--space-7); }

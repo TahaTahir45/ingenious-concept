@@ -294,6 +294,29 @@ button, input, textarea { font: inherit; color: inherit; }
   .site-footer__links { justify-content: flex-start; }
 }
 
+/* ---------- Cursor light (desktop, added by js/components/ambient.js) ---------- */
+.cursor-glow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 40; /* under the header */
+  width: 760px;
+  height: 760px;
+  margin: -380px 0 0 -380px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--wash) 15%, transparent), transparent);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 600ms var(--ease-out);
+  will-change: transform;
+}
+.cursor-glow.is-on { opacity: 1; }
+[data-theme="light"] .cursor-glow {
+  mix-blend-mode: multiply;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--wash) 12%, white), transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
